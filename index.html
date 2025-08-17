@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>عد تنازلي مع Embed ويبهوك</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      text-align: center;
+      background: #f8f9fa;
+      padding: 40px;
+    }
+    h1 { color: #333; }
+    input, button {
+      padding: 8px;
+      margin: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #218838; }
+    #timer {
+      margin-top: 30px;
+      font-size: 2em;
+      color: #d62828;
+    }
+  </style>
+</head>
+<body>
+  <h1>⏳ مؤقت عد تنازلي (Embed في ديسكورد)</h1>
+
+  <div>
+    <label>أيام:</label>
+    <input type="number" id="daysInput" value="0"><br>
+
+    <label>ساعات:</label>
+    <input type="number" id="hoursInput" value="0"><br>
+
+    <label>دقائق:</label>
+    <input type="number" id="minutesInput" value="0"><br>
+
+    <label>ثواني:</label>
+    <input type="number" id="secondsInput" value="30"><br><br>
+
+    <label>رابط الويبهوك (Discord):</label><br>
+    <input type="text" id="webhookInput" placeholder="https://discord.com/api/webhooks/..."><br><br>
+
+    <button onclick="startCountdown()">ابدأ العد التنازلي</button>
+  </div>
+
+  <div id="timer"></div>
+
+  <script>
+    let countdown;
+    let messageId = null;
+    let webhookBase = null;
+
+    async function startCountdown() {
+      const days = parseInt(document.getElementById("daysInput").value) || 0;
+      const hours = parseInt(document.getElementById("hoursInput").value) || 0;
+      const minutes = parseInt(document.getElementById("minutesInput").value) || 0;
+      const seconds = parseInt(document.getElementById("secondsInput").value) || 0;
+      const webhookURL = document.getElementById("webhookInput").value;
+      const timerEl = document.getElementById("timer");
+
+      if (!webhookURL) {
+        alert("رجاءً أدخل رابط الويبهوك");
+        return;
+      }
+
+      webhookBase = webhookURL.split("/messages")[0];
+      let totalSeconds = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
+
+      clearInterval(countdown);
+
+      // إرسال أول Embed
+      const firstMsg = await fetch(webhookURL + "?wait=true", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          embeds: [{
+            title: "⏳ Countdown",
+            description: "Starting countdown...",
+            color: 0x3498db // أزرق
+          }]
+        })
+      }).then(r => r.json());
+
+      messageId = firstMsg.id;
+
+      countdown = setInterval(() => {
+        let d = Math.floor(totalSeconds / 86400);
+        let h = Math.floor((totalSeconds % 86400) / 3600);
+        let m = Math.floor((totalSeconds % 3600) / 60);
+        let s = totalSeconds % 60;
+
+        const msg = `${d} Days , ${h} Hours , ${m} Minutes , ${s} Seconds`;
+        timerEl.textContent = msg;
+
+        // تعديل نفس الرسالة كـ Embed
+        fetch(`${webhookBase}/messages/${messageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            embeds: [{
+              title: "⏳ Countdown",
+              description: msg,
+              color: 0xe67e22 // برتقالي
+            }]
+          })
+        }).catch(console.error);
+
+        totalSeconds--;
+
+        if (totalSeconds < 0) {
+          clearInterval(countdown);
+          timerEl.textContent = "⏳ انتهى العد!";
+          fetch(`${webhookBase}/messages/${messageId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              embeds: [{
+                title: "⏳ Countdown Finished!",
+                description: "🎉 الوقت انتهى!",
+                color: 0x2ecc71 // أخضر
+              }]
+            })
+          }).catch(console.error);
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
