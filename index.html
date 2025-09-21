@@ -1,139 +1,252 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>عد تنازلي مع Embed ويبهوك</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>بورتفوليو - Z3em</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Fira+Code&display=swap" rel="stylesheet"/>
+  <!-- Prism.js -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      text-align: center;
-      background: #f8f9fa;
-      padding: 40px;
-    }
-    h1 { color: #333; }
-    input, button {
-      padding: 8px;
-      margin: 6px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1em;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover { background: #218838; }
-    #timer {
-      margin-top: 30px;
-      font-size: 2em;
-      color: #d62828;
-    }
+    body { background:#0b0b0d; color:#e6e6e6; font-family:'Cairo',sans-serif; scroll-behavior:smooth; }
+    .bg-glass { background:rgba(255,255,255,0.03); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.05);}
+    .font-code { font-family:'Fira Code',monospace; }
+    .hidden-char { opacity:0; transition:opacity .15s; }
+    .caret::after { content:"|"; color:#a020f0; animation:blink .7s infinite; }
+    @keyframes blink { 50% { opacity:0; } }
   </style>
 </head>
 <body>
-  <h1>⏳ مؤقت عد تنازلي (Embed في ديسكورد)</h1>
 
-  <div>
-    <label>أيام:</label>
-    <input type="number" id="daysInput" value="0"><br>
-
-    <label>ساعات:</label>
-    <input type="number" id="hoursInput" value="0"><br>
-
-    <label>دقائق:</label>
-    <input type="number" id="minutesInput" value="0"><br>
-
-    <label>ثواني:</label>
-    <input type="number" id="secondsInput" value="30"><br><br>
-
-    <label>رابط الويبهوك (Discord):</label><br>
-    <input type="text" id="webhookInput" placeholder="https://discord.com/api/webhooks/..."><br><br>
-
-    <button onclick="startCountdown()">ابدأ العد التنازلي</button>
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-glass">
+  <div class="container mx-auto flex justify-between items-center p-4">
+    <div class="flex items-center gap-2">
+      <i data-lucide="terminal" class="w-6 h-6 text-purple-400"></i>
+      <span class="font-bold text-xl">Z3em</span>
+    </div>
+    <nav class="hidden md:flex gap-6">
+      <a href="#about" class="hover:text-purple-400">من أنا</a>
+      <a href="#skills" class="hover:text-purple-400">المهارات</a>
+      <a href="#projects" class="hover:text-purple-400">المشاريع</a>
+      <a href="#contact" class="hover:text-purple-400">تواصل</a>
+    </nav>
+    <button id="menuBtn" class="md:hidden"><i data-lucide="menu" class="w-7 h-7"></i></button>
   </div>
+</header>
 
-  <div id="timer"></div>
+<!-- Mobile Menu -->
+<div id="mobileMenu" class="fixed top-0 right-0 h-full w-64 bg-glass transform translate-x-full transition-transform duration-300 z-50">
+  <div class="flex justify-between items-center p-4 border-b border-white/10">
+    <span class="font-bold">القائمة</span>
+    <button id="closeMenu"><i data-lucide="x" class="w-6 h-6"></i></button>
+  </div>
+  <nav class="flex flex-col p-6 gap-4 text-lg">
+    <a href="#about" class="menu-link hover:text-purple-400">من أنا</a>
+    <a href="#skills" class="menu-link hover:text-purple-400">المهارات</a>
+    <a href="#projects" class="menu-link hover:text-purple-400">المشاريع</a>
+    <a href="#contact" class="menu-link hover:text-purple-400">تواصل</a>
+  </nav>
+</div>
+<div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40"></div>
 
-  <script>
-    let countdown;
-    let messageId = null;
-    let webhookBase = null;
+<!-- Hero -->
+<section class="min-h-screen flex flex-col justify-center items-center text-center px-4">
+  <h1 class="text-5xl font-bold mb-6">مرحباً، أنا <span class="text-purple-400">Z3em</span></h1>
+  <p class="text-gray-300 mb-8">مبرمج متخصص في تطوير الويب والتطبيقات</p>
+  <div class="bg-glass rounded-xl p-6 w-full max-w-2xl font-code text-sm">
+    <pre><code id="heroCode" class="language-js caret"></code></pre>
+  </div>
+</section>
 
-    async function startCountdown() {
-      const days = parseInt(document.getElementById("daysInput").value) || 0;
-      const hours = parseInt(document.getElementById("hoursInput").value) || 0;
-      const minutes = parseInt(document.getElementById("minutesInput").value) || 0;
-      const seconds = parseInt(document.getElementById("secondsInput").value) || 0;
-      const webhookURL = document.getElementById("webhookInput").value;
-      const timerEl = document.getElementById("timer");
+<!-- About -->
+<section id="about" class="py-20 container mx-auto px-4 text-center">
+  <h2 class="text-3xl font-bold mb-6 text-purple-400">
+    <i data-lucide="user" class="inline w-6 h-6"></i> من أنا
+  </h2>
+  <p class="text-gray-300 max-w-2xl mx-auto mb-10">
+    أنا Z3em، مطور شغوف بكتابة كود نظيف وبناء تطبيقات عالية الجودة باستخدام أحدث التقنيات.
+  </p>
 
-      if (!webhookURL) {
-        alert("رجاءً أدخل رابط الويبهوك");
-        return;
+  <!-- صورة مع انيميشن -->
+ <div class="flex justify-center">
+    <div class="relative w-1/2 sm:w-2/3 lg:w-1/2 aspect-square">
+      <img id="avatar" 
+           src="https://i.ibb.co/pjhjLnJ0/720c929a6378.jpg" 
+           alt="شخصيتي" 
+           class="w-full h-full rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] border border-white/10 object-cover transition-transform duration-100 ease-out" />
+    </div>
+  </div>
+</section>
+
+<!-- Skills -->
+<section id="skills" class="py-20 container mx-auto px-4">
+  <h2 class="text-3xl font-bold mb-10 text-center text-purple-400"><i data-lucide="code-2" class="inline w-6 h-6"></i> المهارات</h2>
+  <div class="grid md:grid-cols-3 gap-6 text-center">
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="file-code" class="w-6 h-6 mb-2 text-purple-400"></i>HTML / CSS</div>
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="code" class="w-6 h-6 mb-2 text-purple-400"></i>JavaScript / TypeScript</div>
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="layout-dashboard" class="w-6 h-6 mb-2 text-purple-400"></i>React / Next.js</div>
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="server" class="w-6 h-6 mb-2 text-purple-400"></i>Node.js / Express</div>
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="database" class="w-6 h-6 mb-2 text-purple-400"></i>Databases</div>
+    <div class="bg-glass rounded-xl p-6"><i data-lucide="git-branch" class="w-6 h-6 mb-2 text-purple-400"></i>Git / GitHub</div>
+  </div>
+</section>
+
+<!-- Projects -->
+<section id="projects" class="py-20 container mx-auto px-4">
+  <h2 class="text-3xl font-bold mb-10 text-center text-purple-400">
+    <i data-lucide="folder-code" class="inline w-6 h-6"></i> المشاريع
+  </h2>
+  <div class="grid md:grid-cols-3 gap-6">
+    <a href="https://private-project-psi.vercel.app" target="_blank" class="bg-glass rounded-xl p-6 flex flex-col items-center hover:bg-purple-500/20 transition">
+      <i data-lucide="github" class="w-8 h-8 mb-3 text-purple-400"></i>
+      <span class="font-bold">System-Bot</span>
+      
+    </a>
+     <a href="https://private-project-psi.vercel.app" target="_blank" class="bg-glass rounded-xl p-6 flex flex-col items-center hover:bg-purple-500/20 transition">
+      <i data-lucide="github" class="w-8 h-8 mb-3 text-purple-400"></i>
+      <span class="font-bold">BrodCast-WebSite</span>
+    
+    </a>
+     <a href="https://private-project-psi.vercel.app" target="_blank" class="bg-glass rounded-xl p-6 flex flex-col items-center hover:bg-purple-500/20 transition">
+      <i data-lucide="github" class="w-8 h-8 mb-3 text-purple-400"></i>
+      <span class="font-bold">Ticket-Bot</span>
+      
+    </a>
+     <a href="https://private-project-psi.vercel.app" target="_blank" class="bg-glass rounded-xl p-6 flex flex-col items-center hover:bg-purple-500/20 transition">
+      <i data-lucide="github" class="w-8 h-8 mb-3 text-purple-400"></i>
+      <span class="font-bold">quran-bot</span>
+     
+    </a>
+     <a href="https://private-project-psi.vercel.app" target="_blank" class="bg-glass rounded-xl p-6 flex flex-col items-center hover:bg-purple-500/20 transition">
+      <i data-lucide="github" class="w-8 h-8 mb-3 text-purple-400"></i>
+      <span class="font-bold">HtmlCode-Enscript</span>
+    
+    </a>
+   
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="py-20 container mx-auto px-4 text-center">
+  <h2 class="text-3xl font-bold mb-10 text-purple-400"><i data-lucide="mail" class="inline w-6 h-6"></i> التواصل</h2>
+  <div class="bg-glass rounded-xl p-6 w-full max-w-2xl mx-auto font-code text-sm">
+    <pre><code id="contactCode" class="language-js caret"></code></pre>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-6 text-center text-gray-400 bg-glass mt-10">
+  <div class="flex justify-center gap-6 mb-4">
+    
+    <a href="https://github.com/z3em123123" target="_blank"><i data-lucide="github" class="w-6 h-6 hover:text-purple-400"></i></a>
+  </div>
+  © 2025 Z3em - جميع الحقوق محفوظة
+</footer>
+
+<script>
+// الأكواد
+const heroCodeText = `const me = {
+  name: "Z3em",
+  role: "Full-Stack Developer",
+  skills: ["HTML","CSS","JavaScript","React"],
+  location: "Saudi Arabia"
+};
+
+console.log("Welcome to my portfolio 🚀");`;
+
+const contactCodeText = `const contact = {
+  
+  github: "https://github.com/z3em123123",
+  ID Discord: "973392064198873099",
+  Discord user: "z3em.exe"
+};
+
+console.log("رسالي عبر ديسكورد ✉️");`;
+
+function typeCode(text, id, speed=25) {
+  const el = document.getElementById(id);
+  el.innerHTML = Prism.highlight(text, Prism.languages.javascript, "javascript");
+
+  function wrapChars(el) {
+    if (el.nodeType === 3) {
+      const frag = document.createDocumentFragment();
+      for (let ch of el.textContent) {
+        const span = document.createElement("span");
+        span.textContent = ch;
+        span.classList.add("hidden-char");
+        frag.appendChild(span);
       }
-
-      webhookBase = webhookURL.split("/messages")[0];
-      let totalSeconds = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
-
-      clearInterval(countdown);
-
-      // إرسال أول Embed
-      const firstMsg = await fetch(webhookURL + "?wait=true", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          embeds: [{
-            title: "⏳ Countdown",
-            description: "Starting countdown...",
-            color: 0x3498db // أزرق
-          }]
-        })
-      }).then(r => r.json());
-
-      messageId = firstMsg.id;
-
-      countdown = setInterval(() => {
-        let d = Math.floor(totalSeconds / 86400);
-        let h = Math.floor((totalSeconds % 86400) / 3600);
-        let m = Math.floor((totalSeconds % 3600) / 60);
-        let s = totalSeconds % 60;
-
-        const msg = `${d} Days , ${h} Hours , ${m} Minutes , ${s} Seconds`;
-        timerEl.textContent = msg;
-
-        // تعديل نفس الرسالة كـ Embed
-        fetch(`${webhookBase}/messages/${messageId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            embeds: [{
-              title: "⏳ Countdown",
-              description: msg,
-              color: 0xe67e22 // برتقالي
-            }]
-          })
-        }).catch(console.error);
-
-        totalSeconds--;
-
-        if (totalSeconds < 0) {
-          clearInterval(countdown);
-          timerEl.textContent = "⏳ انتهى العد!";
-          fetch(`${webhookBase}/messages/${messageId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              embeds: [{
-                title: "⏳ Countdown Finished!",
-                description: "🎉 الوقت انتهى!",
-                color: 0x2ecc71 // أخضر
-              }]
-            })
-          }).catch(console.error);
-        }
-      }, 1000);
+      return frag;
+    } else if (el.nodeType === 1) {
+      const clone = el.cloneNode(false);
+      el.childNodes.forEach(child => clone.appendChild(wrapChars(child)));
+      return clone;
     }
-  </script>
+    return document.createTextNode("");
+  }
+
+  const wrapped = wrapChars(el);
+  el.innerHTML = "";
+  el.appendChild(wrapped);
+
+  const spans = el.querySelectorAll("span.hidden-char");
+  let i = 0;
+  function showChar() {
+    if (i < spans.length) {
+      spans[i].style.opacity = 1;
+      i++;
+      setTimeout(showChar, speed);
+    } else {
+      el.classList.remove("caret");
+    }
+  }
+  showChar();
+}
+
+window.onload = () => {
+  typeCode(heroCodeText, "heroCode", 20);
+  setTimeout(() => typeCode(contactCodeText, "contactCode", 20), 5000);
+  lucide.createIcons();
+};
+
+// القائمة الجانبية
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+const closeMenu = document.getElementById("closeMenu");
+const overlay = document.getElementById("overlay");
+const links = document.querySelectorAll(".menu-link");
+
+menuBtn.onclick = () => {
+  mobileMenu.classList.remove("translate-x-full");
+  overlay.classList.remove("hidden");
+};
+closeMenu.onclick = closeSidebar;
+overlay.onclick = closeSidebar;
+links.forEach(link => link.addEventListener("click", closeSidebar));
+
+function closeSidebar() {
+  mobileMenu.classList.add("translate-x-full");
+  overlay.classList.add("hidden");
+}
+
+// حركة الصورة مع الماوس
+const avatar = document.getElementById("avatar");
+document.addEventListener("mousemove", (e) => {
+  const { innerWidth, innerHeight } = window;
+  const x = (e.clientX / innerWidth - 0.5) * 25;
+  const y = (e.clientY / innerHeight - 0.5) * 25;
+  avatar.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+});
+</script>
+</body>
+</html>
+
+});
+</script>
 </body>
 </html>
